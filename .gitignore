@@ -1,0 +1,27 @@
+# deps
+node_modules/
+package-lock.json
+bun.lockb
+
+# build
+dist/
+.cache/
+
+# transcripts — kept local, not shipped (mitigates commit bloat)
+content/videos/*_transcript.txt
+content/videos/*_transcript.md
+*_transcript.txt
+
+# large media — use LFS if needed (thumbnails, covers)
+# keep .md lean (8KB avg), media separate
+
+# OS
+.DS_Store
+Thumbs.db
+
+# env
+.env
+.env.*
+
+# logs
+*.log
