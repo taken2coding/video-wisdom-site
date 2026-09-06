@@ -3,7 +3,7 @@ services:
     name: video-wisdom-site
     env: static
     branch: main
-    buildCommand: pip install -q faster-whisper yt-dlp --cache-dir /workspace/.cache/pip && npm install --cache /workspace/.cache/npm && npm run build
+    buildCommand: pip install -q --break-system-packages faster-whisper yt-dlp --cache-dir ./.cache/pip && (npm install --cache ./.cache/npm 2>/dev/null || bun install) && (npm run build 2>/dev/null || bun run build)
     staticPublishPath: dist
     headers:
       - path: /*

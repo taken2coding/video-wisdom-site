@@ -10,7 +10,7 @@
     "build": "node src/build-video-site.js || bun src/build-video-site.js",
     "watch": "node Tools/WatchAndPublish.js || bun Tools/WatchAndPublish.js",
     "dev": "(node src/build-video-site.js || bun src/build-video-site.js) && npx serve dist -p 3000",
-    "postinstall": "pip install -q faster-whisper yt-dlp --cache-dir /workspace/.cache/pip 2>&1 | tail -n 5; mkdir -p /workspace/.cache/huggingface"
+    "postinstall": "pip install -q --break-system-packages faster-whisper yt-dlp --cache-dir ./.cache/pip 2>&1 | tail -n 5; mkdir -p ./.cache/huggingface; mkdir -p ./.cache/npm"
   },
   "keywords": ["video", "wisdom", "static"],
   "license": "MIT"
