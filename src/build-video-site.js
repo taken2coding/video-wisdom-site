@@ -41,7 +41,28 @@ return `<!doctype html>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 <meta name="color-scheme" content="light"/>
-<meta name="description" content="${esc(description||"Peter Ugwuoke — builder, writer and curator of lean wisdom. Ideas distilled. Wisdom applied.")}"/>
+<meta name="description" content="${esc(description||"Peter Ugwuoke — Due Diligence Lead with expertise in Due Diligence Investigations, Compliance knowhow and Data privacy expertise. Helping businesses navigate complex regulated environments with screening, background checks and risk intelligence.")}"/>
+<meta name="keywords" content="Peter Ugwuoke, Due Diligence, Data Privacy, Compliance, Cybersecurity, AI, Background Checks, Corporate Records, Beneficiary Ownership, PEP Screening, Adverse Media, OSINT, Nigeria"/>
+<meta name="author" content="Peter Ugwuoke"/>
+<meta name="robots" content="index, follow, max-image-preview:large"/>
+<link rel="canonical" href="https://www.peterugwuoke.com.ng/"/>
+<meta property="og:type" content="website"/>
+<meta property="og:site_name" content="Peter Ugwuoke"/>
+<meta property="og:title" content="${esc(title)}"/>
+<meta property="og:description" content="${esc(description||"Peter Ugwuoke — Due Diligence Lead with expertise in Due Diligence Investigations, Compliance knowhow and Data privacy expertise.")}"/>
+<meta property="og:url" content="https://www.peterugwuoke.com.ng/"/>
+<meta property="og:image" content="https://www.peterugwuoke.com.ng/images/sir_p_main.png"/>
+<meta property="og:image:alt" content="Peter Ugwuoke — portrait"/>
+<meta property="og:image:width" content="1280"/>
+<meta property="og:image:height" content="1280"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="${esc(title)}"/>
+<meta name="twitter:description" content="${esc(description||"Peter Ugwuoke — Due Diligence Lead with expertise in Due Diligence Investigations, Compliance knowhow and Data privacy expertise.")}"/>
+<meta name="twitter:image" content="https://www.peterugwuoke.com.ng/images/sir_p_main.png"/>
+<meta name="twitter:creator" content="@sirp4change"/>
+<meta property="og:locale" content="en_NG"/>
+<link rel="icon" type="image/png" href="/images/sir_p_main.png"/>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"Person","name":"Peter Ugwuoke","jobTitle":"Due Diligence Lead - Background Check International","description":"Due Diligence Lead with expertise in Due Diligence Investigations, Compliance knowhow and Data privacy expertise","url":"https://www.peterugwuoke.com.ng/","image":"https://www.peterugwuoke.com.ng/images/sir_p_main.png","sameAs":["https://www.linkedin.com/in/peterugwuoke","https://www.facebook.com/sirp4change/","https://www.biblecounselor.com.ng","https://www.shop.highfiveltd.com"],"knowsAbout":["Due Diligence","Data Privacy","Compliance","Cybersecurity","AI","Background Checks","Corporate Records","PEP Screening"]}</script>
 <title>${esc(title)}</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400&family=Newsreader:opsz,ital,wght@6..72,0,300;6..72,1,300&display=swap" rel="stylesheet">
@@ -198,7 +219,7 @@ a{color:inherit;text-decoration:none}
 <body>
 <header class="topbar"><div class="topbar-inner"><a class="mark" href="${esc(homeHref)}"><span class="mark-badge">PU</span><span><span class="mark-name">Peter Ugwuoke</span><span class="mark-sub">Due Diligence | Data Privacy | Compliance | Cybersecurity | AI</span></span></a><nav class="nav" style="position:relative"><div class="consult-desktop" style="text-align:right;line-height:1.3"><div style="font-size:0.7rem;letter-spacing:0.12em;text-transform:uppercase;font-weight:700;color:var(--ink)">Consult</div><div style="font-size:0.68rem;color:var(--ink);margin-top:0.15rem;text-transform:none">peterugwuokeify@gmail.com<br/>+2349076117035</div></div><button class="consult-toggle" aria-expanded="false" aria-controls="consult-panel" type="button">Consult</button><div id="consult-panel" class="consult-panel" hidden><div style="font-size:0.7rem;letter-spacing:0.12em;text-transform:uppercase;font-weight:700;color:var(--ink)">Consult</div><div style="font-size:0.68rem;color:var(--ink);margin-top:0.4rem;line-height:1.4">peterugwuokeify@gmail.com<br/>+2349076117035</div></div></nav></div></header>
 ${bodyHtml}
-<footer class="footer"><div style="max-width:var(--max);margin:0 auto"><a href="${esc(homeHref)}" style="text-decoration:none;color:inherit">© ${new Date().getFullYear()} Peter Ugwuoke • Africa/Lagos</a></div></footer>
+<footer class="footer"><div style="max-width:var(--max);margin:0 auto"><a href="${esc(homeHref)}" style="text-decoration:none;color:inherit">© ${new Date().getFullYear()} Peter Ugwuoke • Africa/Lagos</a><div style="margin-top:0.7rem;display:flex;gap:0.9rem;justify-content:center;flex-wrap:wrap;font-size:0.72rem"><a href="https://www.linkedin.com/in/peterugwuoke" target="_blank" rel="noopener" aria-label="LinkedIn" style="color:#FFFFFF;text-decoration:underline;text-underline-offset:3px;text-decoration-color:rgba(255,255,255,0.6)">LinkedIn</a><a href="https://www.facebook.com/sirp4change/" target="_blank" rel="noopener" aria-label="Facebook" style="color:#FFFFFF;text-decoration:underline;text-underline-offset:3px">Facebook</a><a href="https://www.facebook.com/profile.php?id=61593746679286" target="_blank" rel="noopener" style="color:#FFFFFF;text-decoration:underline;text-underline-offset:3px">NaijaPrivacyGuide</a><a href="https://www.biblecounselor.com.ng" target="_blank" rel="noopener" style="color:#FFFFFF">BibleCounsel</a><a href="https://www.shop.highfiveltd.com" target="_blank" rel="noopener" style="color:#FFFFFF">Shop HighFive</a><a href="${esc(gleaningsHref)}" style="color:#FFFFFF">Gleanings</a></div></div></footer>
 <script>(function(){var b=document.querySelector('.consult-toggle'),p=document.getElementById('consult-panel');if(!b||!p)return;b.addEventListener('click',function(e){e.stopPropagation();var x=b.getAttribute('aria-expanded')==='true';b.setAttribute('aria-expanded',!x);p.hidden=x;});document.addEventListener('click',function(e){if(!p.hidden&&!p.contains(e.target)&&e.target!==b){p.hidden=true;b.setAttribute('aria-expanded','false');}});document.addEventListener('keydown',function(e){if(e.key==='Escape'&&!p.hidden){p.hidden=true;b.setAttribute('aria-expanded','false');}});})();</script>
 </body>
 </html>`;}
