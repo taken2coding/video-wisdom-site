@@ -174,10 +174,14 @@ return `<!doctype html>
 <meta name="twitter:image" content="https://www.peterugwuoke.com.ng/images/sir_p_main.png"/>
 <meta name="twitter:creator" content="@sirp4change"/>
 <meta property="og:locale" content="en_NG"/>
-<link rel="icon" type="image/x-icon" href="/favicon.ico"/>
+<link rel="icon" href="/favicon.ico" sizes="any"/>
+<link rel="shortcut icon" href="/favicon.ico"/>
 <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32.png"/>
+<link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-32.png"/>
 <link rel="icon" type="image/png" sizes="512x512" href="/images/favicon.png"/>
 <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png"/>
+<meta name="theme-color" content="#24486A"/>
+<script defer src="https://umami-postgresql-latest-8xgn.onrender.com/script.js" data-website-id="c254ecd5-4d1d-4bae-840d-b46fd131b45e"></script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"Person","name":"Peter Ugwuoke","jobTitle":"Due Diligence Lead - Background Check International","description":"Due Diligence Lead with expertise in Due Diligence Investigations, Compliance knowhow and Data privacy expertise","url":"https://www.peterugwuoke.com.ng/","image":"https://www.peterugwuoke.com.ng/images/sir_p_main.png","sameAs":["https://www.linkedin.com/in/peterugwuoke","https://www.facebook.com/sirp4change/","https://www.biblecounselor.com.ng","https://www.shop.highfiveltd.com"],"knowsAbout":["Due Diligence","Data Privacy","Compliance","Cybersecurity","AI","Background Checks","Corporate Records","PEP Screening"]}</script>
 <title>${esc(title)}</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
