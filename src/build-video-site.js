@@ -33,6 +33,119 @@ function cleanBody(body){
   b=b.replace(/^---\s*\n/, '');
   return b;
 }
+function paginateLongParagraph(text){
+  const sents=text.split(/(?<=[.!?])\s+(?=[A-Z0-9“"\(])/);
+  if(sents.length<=3) return [text.trim()];
+  const paras=[]; const CHUNK=3;
+  for(let i=0;i<sents.length;i+=CHUNK){
+    const chunk=sents.slice(i,i+CHUNK).join(" ").trim();
+    if(chunk) paras.push(chunk);
+  }
+  return paras;
+}
+function enhanceAuthorsWords(html){
+  const marker="<h2>Author's words</h2>";
+  const idx=html.indexOf(marker);
+  if(idx===-1) return html;
+  const after=html.slice(idx+marker.length);
+  const nextH2=after.search(/<h2>/);
+  const sectionEnd=nextH2===-1 ? after.length : nextH2;
+  const sectionInner=after.slice(0,sectionEnd);
+  const rest=after.slice(sectionEnd);
+  let inner=sectionInner;
+  const pCount=(inner.match(/<p>/g)||[]).length;
+  const pMatch=inner.match(/<p>([\s\S]*?)<\/p>/);
+  if(pMatch && pCount===1){
+    let raw=pMatch[1].replace(/<br\/?>/g," ").replace(/\s+/g," ").trim();
+    raw=raw.replace(/\s*---\s*/g," ").trim();
+    if(raw.length>600){
+      let paras=paginateLongParagraph(raw);
+      paras=paras.map(p=>p.replace(/\s*---\s*/g," ").trim()).filter(p=>p && p!=="---");
+      const newPs=paras.map(t=>`<p>${t}</p>`).join("\n");
+      const withoutP=inner.replace(/<p>[\s\S]*?<\/p>/,"").replace(/<p>\s*---\s*<\/p>/g,"").trim();
+      inner="\n"+newPs+"\n"+(withoutP?withoutP+"\n":"");
+    }
+  } else if(pCount===0){
+    // mdToHtml left plain text after <h2> without <p> (no blank line) — paginate it
+    let raw=inner.replace(/<br\/?>/g," ").replace(/<[^>]+>/g," ").replace(/\s+/g," ").trim();
+    raw=raw.replace(/\s*---\s*/g," ").trim();
+    if(raw.length>300){
+      let paras=paginateLongParagraph(raw);
+      paras=paras.map(p=>p.replace(/\s*---\s*/g," ").trim()).filter(p=>p && p!=="---");
+      inner="\n"+paras.map(t=>`<p>${t}</p>`).join("\n")+"\n";
+    } else if(raw){
+      raw=raw.replace(/\s*---\s*/g," ").trim();
+      if(raw) inner=`\n<p>${raw}</p>\n`;
+    }
+  } else {
+    // clean stray hr paragraph if present
+    inner=inner.replace(/<p>\s*---\s*<\/p>/g,"");
+  }
+  const wrapped=`\n<div class="authors-words">\n${inner.trim()}\n</div>\n`;
+  return html.slice(0,idx+marker.length)+wrapped+rest;
+}
+function enhanceSummary(html){
+  const marker="<h2>Summary</h2>";
+  const idx=html.indexOf(marker);
+  if(idx===-1) return html;
+  const after=html.slice(idx+marker.length);
+  const nextH2=after.search(/<h2>/);
+  const sectionEnd=nextH2===-1 ? after.length : nextH2;
+  const sectionInner=after.slice(0,sectionEnd);
+  const rest=after.slice(sectionEnd);
+  let inner=sectionInner.trim();
+  if(!inner) return html;
+  // Ensure content is paragraph-wrapped for kerning container
+  const hasP=inner.includes("<p>");
+  if(!hasP){
+    let raw=inner.replace(/<br\/?>/g," ").replace(/<[^>]+>/g," ").replace(/\s+/g," ").trim();
+    raw=raw.replace(/\s*---\s*/g," ").trim();
+    if(raw) inner=`<p>${raw}</p>`;
+  } else {
+    inner=inner.replace(/<p>\s*---\s*<\/p>/g,"").trim();
+  }
+  const wrapped=`\n<div class="summary-words">\n${inner}\n</div>\n`;
+  return html.slice(0,idx+marker.length)+wrapped+rest;
+}
+function enhanceDifferingThoughts(html){
+  const marker="<h2>Differing thoughts</h2>";
+  const idx=html.indexOf(marker);
+  if(idx===-1) return html;
+  const after=html.slice(idx+marker.length);
+  const nextH2=after.search(/<h2>/);
+  const sectionEnd=nextH2===-1 ? after.length : nextH2;
+  const sectionInner=after.slice(0,sectionEnd);
+  const rest=after.slice(sectionEnd);
+  let inner=sectionInner.trim();
+  if(!inner) return html;
+  const hasP=inner.includes("<p>");
+  if(!hasP){
+    let raw=inner.replace(/<br\/?>/g," ").replace(/<[^>]+>/g," ").replace(/\s+/g," ").trim();
+    raw=raw.replace(/\s*---\s*/g," ").trim();
+    if(raw) inner=`<p>${raw}</p>`;
+  } else {
+    inner=inner.replace(/<p>\s*---\s*<\/p>/g,"").trim();
+  }
+  const wrapped=`\n<div class="differing-words">\n${inner}\n</div>\n`;
+  return html.slice(0,idx+marker.length)+wrapped+rest;
+}
+function enhanceKeyQuotes(html){
+  const marker="<h2>Key Quotes from Author</h2>";
+  const idx=html.indexOf(marker);
+  if(idx===-1) return html;
+  const after=html.slice(idx+marker.length);
+  const nextH2=after.search(/<h2>/);
+  const sectionEnd=nextH2===-1 ? after.length : nextH2;
+  const sectionInner=after.slice(0,sectionEnd);
+  const rest=after.slice(sectionEnd);
+  let inner=sectionInner.trim();
+  if(!inner) return html;
+  // Strip stray hr paragraphs and keep ul/p structure
+  inner=inner.replace(/<p>\s*---\s*<\/p>/g,"").trim();
+  if(!inner) return html.slice(0,idx+marker.length)+rest;
+  const wrapped=`\n<div class="quotes-words">\n${inner}\n</div>\n`;
+  return html.slice(0,idx+marker.length)+wrapped+rest;
+}
 function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}
 function brandShell({title,description,bodyHtml,homeHref="index.html",gleaningsHref="projects/gleanings/insights/index.html",casesHref="#cases"}){
 return `<!doctype html>
@@ -61,7 +174,10 @@ return `<!doctype html>
 <meta name="twitter:image" content="https://www.peterugwuoke.com.ng/images/sir_p_main.png"/>
 <meta name="twitter:creator" content="@sirp4change"/>
 <meta property="og:locale" content="en_NG"/>
-<link rel="icon" type="image/png" href="/images/sir_p_main.png"/>
+<link rel="icon" type="image/x-icon" href="/favicon.ico"/>
+<link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32.png"/>
+<link rel="icon" type="image/png" sizes="512x512" href="/images/favicon.png"/>
+<link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png"/>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"Person","name":"Peter Ugwuoke","jobTitle":"Due Diligence Lead - Background Check International","description":"Due Diligence Lead with expertise in Due Diligence Investigations, Compliance knowhow and Data privacy expertise","url":"https://www.peterugwuoke.com.ng/","image":"https://www.peterugwuoke.com.ng/images/sir_p_main.png","sameAs":["https://www.linkedin.com/in/peterugwuoke","https://www.facebook.com/sirp4change/","https://www.biblecounselor.com.ng","https://www.shop.highfiveltd.com"],"knowsAbout":["Due Diligence","Data Privacy","Compliance","Cybersecurity","AI","Background Checks","Corporate Records","PEP Screening"]}</script>
 <title>${esc(title)}</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -114,10 +230,10 @@ a{color:inherit;text-decoration:none}
   .consult-panel[hidden]{display:none !important}
   .consult-panel:not([hidden]){display:block}
 }
-/* Hero — dossier */
-.hero{max-width:var(--max);margin:0 auto;padding:2.8rem 1.5rem 1.2rem}
-.hero-grid{display:grid;grid-template-columns:1.05fr 0.95fr;gap:2rem;align-items:start}
-@media(max-width:900px){.hero-grid{grid-template-columns:1fr;gap:1.6rem}}
+/* Hero — dossier — mobile-first */
+.hero{max-width:var(--max);margin:0 auto;padding:1.6rem 1rem 1rem}
+.hero-grid{display:grid;grid-template-columns:1fr;gap:1.2rem;align-items:start}
+@media(min-width:900px){.hero{padding:2.8rem 1.5rem 1.2rem}.hero-grid{grid-template-columns:0.9fr 1.1fr;gap:2rem;align-items:center}}
 .kicker{font-size:0.62rem;letter-spacing:0.16em;text-transform:uppercase;color:var(--muted);font-weight:600;display:flex;gap:0.6rem;align-items:center}
 .kicker::before{content:"";width:1.4rem;height:1px;background:var(--ink);display:inline-block}
 .display{font-family:var(--serif);font-weight:400;line-height:0.86;letter-spacing:-0.03em}
@@ -133,10 +249,10 @@ a{color:inherit;text-decoration:none}
 .btn-ghost:hover{background:var(--paper-2)}
 .hero-meta{margin-top:1.6rem;border-top:1px solid var(--line);padding-top:0.9rem;display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;font-size:0.68rem;letter-spacing:0.06em;text-transform:uppercase;color:var(--muted);font-weight:600}
 .hero-meta b{color:var(--ink);font-size:0.9rem;display:block;letter-spacing:-0.01em;text-transform:none;font-family:var(--serif);font-weight:400}
-.dossier{position:relative;background:transparent;border:none;padding:0;margin-top:0.6rem}
-.dossier-frame{position:relative;overflow:visible;background:transparent;aspect-ratio:3/3.4;min-height:440px;max-height:500px;display:flex;align-items:end;justify-content:center;border:none}
-.dossier-frame img{width:90%;height:auto;max-height:480px;object-fit:contain;object-position:center bottom;display:block;filter:drop-shadow(0 16px 24px rgba(11,11,11,0.08));background:transparent}
-@media(max-width:900px){.dossier{margin-top:0}.dossier-frame{min-height:380px;aspect-ratio:4/3}}
+.dossier{position:relative;background:transparent;border:none;padding:0;margin-top:0}
+.dossier-frame{position:relative;overflow:visible;background:transparent;width:100%;aspect-ratio:1/1;min-height:auto;max-height:none;display:flex;align-items:end;justify-content:center;border:none}
+.dossier-frame img{width:100%;max-width:100%;height:auto;max-height:none;aspect-ratio:1/1;object-fit:cover;object-position:35% 18%;clip-path:polygon(12% 0, 100% 0, 100% 88%, 88% 100%, 0 100%, 0 12%);filter:drop-shadow(0 12px 20px rgba(11,11,11,0.08));background:transparent}
+@media(min-width:900px){.dossier{margin-top:0.6rem}.dossier-frame{aspect-ratio:3/3.4;min-height:440px;max-height:500px;width:92%;max-width:420px;margin:0 auto}.dossier-frame img{width:92%;max-width:420px;max-height:480px;aspect-ratio:3/3.4}}
 .dossier-label{position:absolute;top:0.7rem;left:0.7rem;background:var(--paper);border:1px solid var(--ink);padding:0.35rem 0.55rem;font-size:0.58rem;letter-spacing:0.12em;text-transform:uppercase;font-weight:700;display:flex;gap:0.5rem;align-items:center}
 .dossier-label i{width:0.45rem;height:0.45rem;background:var(--accent-2);border-radius:50%;display:inline-block;animation:pulse 2s infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.6}}
@@ -197,23 +313,98 @@ a{color:inherit;text-decoration:none}
 .index-card .foot{margin-top:auto;padding-top:0.6rem;border-top:1px solid var(--line);font-size:0.62rem;letter-spacing:0.06em;text-transform:uppercase;font-weight:700;display:flex;justify-content:space-between;align-items:center;color:var(--muted)}
 .badge{font-size:0.58rem;letter-spacing:0.08em;text-transform:uppercase;font-weight:700;border:1px solid var(--line);padding:0.2rem 0.45rem;border-radius:999px;background:var(--paper-2)}
 .badge-live{background:var(--ink);color:var(--paper);border-color:var(--ink)}
-/* Prose */
-.prose{font-size:0.96rem;line-height:1.78;color:#1F1F1F;max-width:68ch}
+/* Prose — elevated reading */
+.prose{font-size:0.98rem;line-height:1.82;color:#1F1F1F;max-width:68ch;font-kerning:normal;font-variant-ligatures:common-ligatures;font-feature-settings:"kern" 1, "liga" 1, "calt" 1, "onum" 1;text-rendering:optimizeLegibility;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
 .prose h1{font-family:var(--serif);font-size:1.85rem;line-height:1.1;letter-spacing:-0.02em;margin:1.8rem 0 0.7rem;font-weight:400}
 .prose h2{font-family:var(--serif);font-size:1.32rem;line-height:1.3;letter-spacing:-0.01em;margin:1.7rem 0 0.6rem;padding-bottom:0.4rem;border-bottom:1px solid var(--line);font-weight:400}
 .prose h3{font-family:var(--serif);font-size:1.05rem;margin:1.4rem 0 0.5rem;font-weight:600}
-.prose p{margin:0.9rem 0}
+.prose p{margin:1.05rem 0;line-height:1.9;letter-spacing:0.012em;word-spacing:0.03em;hyphens:auto;hyphenate-limit-chars:6 3 2;widows:2;orphans:2;text-wrap:pretty}
 .prose blockquote{border-left:3px solid #24486A;margin:1.3rem 0;padding:0.9rem 1.1rem;background:var(--paper-2);border-radius:0 0.6rem 0.6rem 0;font-style:italic;color:#2B2B2B;box-shadow:0 1px 6px rgba(11,11,11,0.04)}
 .prose ul{margin:0.9rem 0;padding-left:1.2rem;list-style:none}
-.prose ul li{position:relative;padding-left:0.9rem;margin:0.55rem 0}
+.prose ul li{position:relative;padding-left:0.9rem;margin:0.55rem 0;line-height:1.75}
 .prose ul li::before{content:"—";position:absolute;left:0;color:#24486A;font-weight:700}
 .prose code{background:var(--paper-2);border:1px solid var(--line);padding:0.16rem 0.38rem;border-radius:0.35rem;font-size:0.82rem;font-family:var(--mono)}
 .prose a{color:#24486A;text-decoration:underline;text-underline-offset:3px;text-decoration-color:rgba(36,72,106,0.3)}
 .prose a:hover{color:#24486A;text-decoration-color:#24486A}
+/* Author's words — justified, kerned, elevated */
+.authors-words{margin:1rem 0 1.6rem;padding:1.15rem 1.25rem;background:var(--paper-2);border-left:3px solid var(--line-strong);border-radius:0 0.7rem 0.7rem 0}
+.authors-words p{font-family:'Newsreader', Georgia, serif;text-align:justify;text-justify:inter-word;font-size:1.06rem;font-weight:300;line-height:1.92;letter-spacing:0.015em;word-spacing:0.04em;color:#1A1A1A;hyphens:auto;hyphenate-limit-chars:6 3 2;margin:1rem 0;widows:3;orphans:3;text-wrap:pretty;font-kerning:normal;font-variant-ligatures:common-ligatures;font-feature-settings:"kern" 1, "liga" 1, "onum" 1}
+.authors-words p:first-of-type::first-letter{font-family:var(--serif);font-size:2.7em;float:left;line-height:0.78;margin:0.06em 0.14em 0 0;font-weight:400;color:var(--ink)}
+.authors-words p:last-child{margin-bottom:0}
+@media(max-width:640px){
+  .authors-words{padding:0.95rem 1rem}
+  .authors-words p{font-size:1.02rem;line-height:1.85;letter-spacing:0.01em}
+}
+/* Summary — same elevated kerning/justified treatment */
+.summary-words{margin:1rem 0 1.6rem;padding:1.1rem 1.2rem;background:#FFFFFF;border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:0 0.7rem 0.7rem 0}
+.summary-words p{font-family:'Newsreader', Georgia, serif;text-align:justify;text-justify:inter-word;font-size:1.05rem;font-weight:300;line-height:1.9;letter-spacing:0.014em;word-spacing:0.038em;color:#1E1E1E;hyphens:auto;hyphenate-limit-chars:6 3 2;margin:0.9rem 0;widows:3;orphans:3;text-wrap:pretty;font-kerning:normal;font-variant-ligatures:common-ligatures;font-feature-settings:"kern" 1, "liga" 1, "onum" 1}
+.summary-words p:last-child{margin-bottom:0}
+@media(max-width:640px){
+  .summary-words{padding:0.95rem 1rem}
+  .summary-words p{font-size:1.01rem;line-height:1.84;letter-spacing:0.01em}
+}
+/* Differing thoughts — same elevated kerning/justified treatment */
+.differing-words{margin:1rem 0 1.6rem;padding:1.1rem 1.2rem;background:var(--paper);border:1px solid var(--line);border-left:3px solid #8B5E34;border-radius:0 0.7rem 0.7rem 0}
+.differing-words p{font-family:'Newsreader', Georgia, serif;text-align:justify;text-justify:inter-word;font-size:1.05rem;font-weight:300;line-height:1.9;letter-spacing:0.014em;word-spacing:0.038em;color:#1E1E1E;hyphens:auto;hyphenate-limit-chars:6 3 2;margin:0.9rem 0;widows:3;orphans:3;text-wrap:pretty;font-kerning:normal;font-variant-ligatures:common-ligatures;font-feature-settings:"kern" 1, "liga" 1, "onum" 1}
+.differing-words p:last-child{margin-bottom:0}
+@media(max-width:640px){
+  .differing-words{padding:0.95rem 1rem}
+  .differing-words p{font-size:1.01rem;line-height:1.84;letter-spacing:0.01em}
+}
+/* Key Quotes from Author — same elevated kerning, editorial quote treatment */
+.quotes-words{margin:1rem 0 1.6rem;padding:1.1rem 1.2rem;background:var(--paper-2);border:1px solid var(--line);border-left:3px solid var(--ink);border-radius:0 0.7rem 0.7rem 0}
+.quotes-words ul{margin:0;padding:0;list-style:none}
+.quotes-words li{font-family:'Newsreader', Georgia, serif;text-align:left;font-size:1.06rem;font-weight:300;font-style:italic;line-height:1.85;letter-spacing:0.014em;word-spacing:0.038em;color:#1A1A1A;hyphens:auto;hyphenate-limit-chars:6 3 2;margin:0.9rem 0;padding:0.7rem 1rem 0.7rem 1.1rem;background:var(--paper);border-left:3px solid var(--accent);border-radius:0 0.5rem 0.5rem 0;widows:3;orphans:3;text-wrap:pretty;font-kerning:normal;font-variant-ligatures:common-ligatures;font-feature-settings:"kern" 1, "liga" 1, "onum" 1}
+.quotes-words li:first-child{margin-top:0}
+.quotes-words li:last-child{margin-bottom:0}
+.quotes-words li::before{display:none}
+.quotes-words p{font-family:'Newsreader', Georgia, serif;text-align:justify;text-justify:inter-word;font-size:1.05rem;font-weight:300;line-height:1.9;letter-spacing:0.014em;word-spacing:0.038em;color:#1E1E1E;hyphens:auto;margin:0.9rem 0;text-wrap:pretty;font-kerning:normal}
+@media(max-width:640px){
+  .quotes-words{padding:0.95rem 1rem}
+  .quotes-words li{font-size:1.02rem;line-height:1.8;letter-spacing:0.01em;padding:0.6rem 0.9rem 0.6rem 1rem}
+}
 .wrap{max-width:var(--max);margin:0 auto;padding:0 1.5rem}
 .footer{border-top:none;margin-top:2.5rem;padding:1.4rem 1.5rem;text-align:center;color:#FFFFFF;background:#24486A;font-size:0.72rem}
 .footer a{color:#FFFFFF;text-decoration:underline;text-underline-offset:3px;text-decoration-color:rgba(255,255,255,0.6)}
 .footer a:hover{color:#FFFFFF;text-decoration-color:#FFFFFF}
+/* --- Mobile-first 100% width overrides --- */
+img{max-width:100%;height:auto;display:block}
+.hero-img{width:100%;max-width:420px;height:auto;max-height:520px;object-fit:cover;object-position:35% 18%;clip-path:polygon(12% 0, 100% 0, 100% 88%, 88% 100%, 0 100%, 0 12%);filter:drop-shadow(0 16px 24px rgba(11,11,11,0.08))}
+.service-grid{margin-top:1rem;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));gap:0.65rem}
+@media(max-width:640px){
+  html,body{overflow-x:hidden}
+  .topbar-inner{padding:0.7rem 1rem}
+  .mark-sub{font-size:0.52rem;letter-spacing:0.1em}
+  .hero{padding:1.2rem 1rem 0.8rem !important}
+  .hero-grid{grid-template-columns:1fr !important;gap:1rem !important;padding:0 !important}
+  .hero-grid > div{width:100%}
+  .hero-img{width:100% !important;max-width:100% !important;max-height:none !important;aspect-ratio:auto !important}
+  .display{text-align:left !important;width:100%}
+  .display h1{font-size:clamp(2.4rem,9vw,3.2rem) !important}
+  .display div[style*="justify-content:flex-end"]{justify-content:flex-start !important}
+  .wrap{max-width:100% !important;padding-left:1rem !important;padding-right:1rem !important;margin-left:auto !important;margin-right:auto !important;width:100% !important;box-sizing:border-box}
+  .section{padding:1.2rem 1rem !important}
+  .manifesto{padding:1.5rem 1rem !important}
+  .prose{max-width:100% !important;width:100% !important}
+  .prose img{width:100% !important}
+  .icon-projects,.case{width:100%}
+  .service-grid{grid-template-columns:1fr !important}
+  .index-grid{grid-template-columns:1fr !important;gap:0.8rem}
+  .index-card{grid-column:span 12 !important;width:100%}
+  .case{grid-template-columns:1fr !important}
+  .footer{padding:1.2rem 1rem}
+}
+@media(min-width:641px) and (max-width:900px){
+  .hero{padding:1.6rem 1rem 1rem}
+  .hero-grid{grid-template-columns:1fr !important;gap:1.2rem !important;padding:0 !important}
+  .hero-img{width:100% !important;max-width:520px !important;margin:0 auto;display:block}
+  .display{text-align:left !important}
+  .display div[style*="justify-content:flex-end"]{justify-content:flex-start !important}
+  .wrap{padding-left:1rem !important;padding-right:1rem !important}
+}
+@media(min-width:901px){
+  .hero-img{width:92%;max-width:420px}
+}
 </style>
 </head>
 <body>
@@ -232,8 +423,10 @@ fs.mkdirSync(outDir,{recursive:true});fs.mkdirSync(outVideosDir,{recursive:true}
 try{
   if(fs.existsSync(srcImagesDir)){
     for(const f of fs.readdirSync(srcImagesDir)){
-      if(/^sirP_main\.(jpe?g|png|webp|avif)$/i.test(f)){
-        fs.copyFileSync(path.join(srcImagesDir,f),path.join(outImagesDir,f));
+      if(/^sirP_main\.(jpe?g|png|webp|avif)$/i.test(f) || /^sir_p_main\.(png|jpe?g)$/i.test(f) || /^favicon.*\.(png|ico)$/i.test(f) || /^apple-touch-icon\.png$/i.test(f)){
+        const dest = f==='favicon.ico' ? path.join(outDir,f) : path.join(outImagesDir,f);
+        fs.copyFileSync(path.join(srcImagesDir,f), dest);
+        // alias for sirP vs sir_p
         if(f.toLowerCase()==="sirp_main.jpeg"){
           const alt=path.join(outImagesDir,"sirP_main.jpg");
           if(!fs.existsSync(alt)) fs.copyFileSync(path.join(srcImagesDir,f),alt);
@@ -242,28 +435,40 @@ try{
           const alt=path.join(outImagesDir,"sirP_main.jpeg");
           if(!fs.existsSync(alt)) fs.copyFileSync(path.join(srcImagesDir,f),alt);
         }
+        if(f==='sir_p_main.png'){
+          const alt2=path.join(outImagesDir,'sirP_main.png');
+          if(!fs.existsSync(alt2)) fs.copyFileSync(path.join(srcImagesDir,f),alt2);
+        }
+        // also ensure favicon.ico at root
+        if(f==='favicon.png'){
+          const icoSrc=path.join(srcImagesDir,'favicon.ico');
+          if(fs.existsSync(icoSrc)) fs.copyFileSync(icoSrc, path.join(outDir,'favicon.ico'));
+        }
       }
     }
+    // ensure favicon.ico at dist root even if not in loop
+    const favIcoSrc=path.join(srcImagesDir,'favicon.ico');
+    if(fs.existsSync(favIcoSrc)) fs.copyFileSync(favIcoSrc, path.join(outDir,'favicon.ico'));
   }
 }catch(e){}
-for(const it of items){const cleaned=cleanBody(it.body);const htmlBody=mdToHtml(cleaned);const speakerBtn=it.speakerUrl ? `<a href="${esc(it.speakerUrl)}" target="_blank" rel="noopener" style="font-size:0.68rem;letter-spacing:0.04em;text-transform:uppercase;font-weight:700;border:1px solid var(--ink);padding:0.38rem 0.75rem;border-radius:999px;background:var(--ink);color:var(--paper);text-decoration:none">Speaker: ${esc(it.speaker)}${it.handle?' @'+esc(it.handle):''} ↗</a>` : `<span style="font-size:0.68rem;letter-spacing:0.04em;text-transform:uppercase;font-weight:700;border:1px solid var(--line);padding:0.38rem 0.75rem;border-radius:999px;background:var(--paper-2)">${esc(it.speaker)}</span>`;const sourceBtn=it.source ? `<a href="${esc(it.source)}" target="_blank" rel="noopener" style="font-size:0.68rem;letter-spacing:0.04em;text-transform:uppercase;font-weight:700;border:1px solid var(--line);padding:0.38rem 0.75rem;border-radius:999px;background:var(--paper);text-decoration:none">View source ↗</a>` : ``;const metaLine=`<div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-top:0.9rem;align-items:center">${speakerBtn}${sourceBtn}${it.likes?`<span style="font-size:0.68rem;color:var(--muted);border:1px solid var(--line);padding:0.38rem 0.65rem;border-radius:999px;background:var(--paper)">♥ ${esc(it.likes)} likes</span>`:''}${it.plays?`<span style="font-size:0.68rem;color:var(--muted);border:1px solid var(--line);padding:0.38rem 0.65rem;border-radius:999px;background:var(--paper)">${esc(it.plays)} plays</span>`:''}</div>`;const breadcrumb=`<div style="font-size:0.62rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:0.9rem;font-weight:600"><a href="../../../index.html" style="color:var(--muted);text-decoration:none">Home</a> <span style="opacity:0.4">/</span> <a href="../../../index.html#cases" style="color:var(--muted)">Projects</a> <span style="opacity:0.4">/</span> <a href="index.html" style="color:var(--muted)">Gleanings</a> <span style="opacity:0.4">/</span> <span style="color:var(--ink)">${esc(it.category)}</span></div>`;const pageInner=`<div class="wrap" style="max-width:800px;margin:1.8rem auto"><div style="background:var(--paper);border:1px solid var(--line-strong);padding:1.2rem 1.2rem 1rem"><div class="kicker">${esc(it.category)} • ${esc(it.speaker)}</div><h1 style="font-family:var(--serif);font-size:2.15rem;line-height:0.98;letter-spacing:-0.02em;margin:0.6rem 0 0;font-weight:400">${esc(it.title)}</h1>${metaLine}</div><div style="background:var(--paper);border:1px solid var(--line);border-top:none;padding:1.4rem 1.3rem" class="prose">${htmlBody}</div><div style="margin-top:1.1rem;display:flex;gap:0.6rem;flex-wrap:wrap"><a href="index.html" style="font-size:0.72rem;letter-spacing:0.08em;text-transform:uppercase;font-weight:700;border-bottom:1px solid var(--ink);padding-bottom:0.15rem;text-decoration:none">← Back to Gleanings</a><span style="opacity:0.3">•</span><a href="../../../index.html" style="font-size:0.72rem;letter-spacing:0.08em;text-transform:uppercase;font-weight:700;color:var(--muted);text-decoration:none">Home</a></div></div>`;const page=brandShell({title:`${it.title} — Gleanings`,description:it.excerpt.slice(0,150),bodyHtml:pageInner,homeHref:"../../../index.html",gleaningsHref:"index.html",casesHref:"../../../index.html#cases"});fs.writeFileSync(path.join(outGleaningsDir,`${it.slug}.html`),page);fs.writeFileSync(path.join(outVideosDir,`${it.slug}.html`),page);}
+for(const it of items){const cleaned=cleanBody(it.body);const rawHtml=mdToHtml(cleaned);let htmlBody=enhanceAuthorsWords(rawHtml);htmlBody=enhanceSummary(htmlBody);htmlBody=enhanceDifferingThoughts(htmlBody);htmlBody=enhanceKeyQuotes(htmlBody);const speakerBtn=it.speakerUrl ? `<a href="${esc(it.speakerUrl)}" target="_blank" rel="noopener" style="font-size:0.68rem;letter-spacing:0.04em;text-transform:uppercase;font-weight:700;border:1px solid var(--ink);padding:0.38rem 0.75rem;border-radius:999px;background:var(--ink);color:var(--paper);text-decoration:none">Speaker: ${esc(it.speaker)}${it.handle?' @'+esc(it.handle):''} ↗</a>` : `<span style="font-size:0.68rem;letter-spacing:0.04em;text-transform:uppercase;font-weight:700;border:1px solid var(--line);padding:0.38rem 0.75rem;border-radius:999px;background:var(--paper-2)">${esc(it.speaker)}</span>`;const sourceBtn=it.source ? `<a href="${esc(it.source)}" target="_blank" rel="noopener" style="font-size:0.68rem;letter-spacing:0.04em;text-transform:uppercase;font-weight:700;border:1px solid var(--line);padding:0.38rem 0.75rem;border-radius:999px;background:var(--paper);text-decoration:none">View source ↗</a>` : ``;const metaLine=`<div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-top:0.9rem;align-items:center">${speakerBtn}${sourceBtn}${it.likes?`<span style="font-size:0.68rem;color:var(--muted);border:1px solid var(--line);padding:0.38rem 0.65rem;border-radius:999px;background:var(--paper)">♥ ${esc(it.likes)} likes</span>`:''}${it.plays?`<span style="font-size:0.68rem;color:var(--muted);border:1px solid var(--line);padding:0.38rem 0.65rem;border-radius:999px;background:var(--paper)">${esc(it.plays)} plays</span>`:''}</div>`;const breadcrumb=`<div style="font-size:0.62rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:0.9rem;font-weight:600"><a href="../../../index.html" style="color:var(--muted);text-decoration:none">Home</a> <span style="opacity:0.4">/</span> <a href="../../../index.html#cases" style="color:var(--muted)">Projects</a> <span style="opacity:0.4">/</span> <a href="index.html" style="color:var(--muted)">Gleanings</a> <span style="opacity:0.4">/</span> <span style="color:var(--ink)">${esc(it.category)}</span></div>`;const pageInner=`<div class="wrap" style="max-width:800px;margin:1.8rem auto"><div style="background:var(--paper);border:1px solid var(--line-strong);padding:1.2rem 1.2rem 1rem"><div class="kicker">${esc(it.category)} • ${esc(it.speaker)}</div><h1 style="font-family:var(--serif);font-size:2.15rem;line-height:0.98;letter-spacing:-0.02em;margin:0.6rem 0 0;font-weight:400">${esc(it.title)}</h1>${metaLine}</div><div style="background:var(--paper);border:1px solid var(--line);border-top:none;padding:1.4rem 1.3rem" class="prose">${htmlBody}</div><div style="margin-top:1.1rem;display:flex;gap:0.6rem;flex-wrap:wrap"><a href="index.html" style="font-size:0.72rem;letter-spacing:0.08em;text-transform:uppercase;font-weight:700;border-bottom:1px solid var(--ink);padding-bottom:0.15rem;text-decoration:none">← Back to Gleanings</a><span style="opacity:0.3">•</span><a href="../../../index.html" style="font-size:0.72rem;letter-spacing:0.08em;text-transform:uppercase;font-weight:700;color:var(--muted);text-decoration:none">Home</a></div></div>`;const page=brandShell({title:`${it.title} — Gleanings`,description:it.excerpt.slice(0,150),bodyHtml:pageInner,homeHref:"../../../index.html",gleaningsHref:"index.html",casesHref:"../../../index.html#cases"});fs.writeFileSync(path.join(outGleaningsDir,`${it.slug}.html`),page);fs.writeFileSync(path.join(outVideosDir,`${it.slug}.html`),page);}
 let gleaningsInner=`<div class="wrap" style="max-width:1240px;margin:1.2rem auto"><div style="font-size:0.62rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);font-weight:600"><a href="../../../index.html" style="color:var(--muted);text-decoration:none">Home</a> <span style="opacity:0.4">/</span> <a href="../../../index.html#cases" style="color:var(--muted)">Projects</a> <span style="opacity:0.4">/</span> <a href="index.html" style="color:var(--muted)">Gleanings</a> <span style="opacity:0.4">/</span> Insights</div>`;
 if(items.length===0){gleaningsInner+=`<div style="border:1px solid var(--line);padding:1.5rem;text-align:center;color:var(--muted)">No gleanings yet</div>`;}else{for(const [speaker,byCat] of [...bySpeaker.entries()].sort((a,b)=>a[0].localeCompare(b[0]))){gleaningsInner+=`<h2 style="font-family:var(--serif);font-size:1.2rem;margin:1.4rem 0 0.6rem;border-top:1px solid var(--line);padding-top:0.8rem">${esc(speaker)}</h2>`;for(const [cat,vids] of [...byCat.entries()].sort((a,b)=>a[0].localeCompare(b[0]))){gleaningsInner+=`<div style="font-size:0.62rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);font-weight:700;margin:0.8rem 0 0.6rem">${esc(cat)} • ${vids.length}</div><div class="index-grid">`;for(const v of vids){gleaningsInner+=`<a class="index-card" href="${esc(v.slug)}.html"><div class="eyebrow" style="font-size:0.58rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);font-weight:700">${esc(cat)}</div><h4>${esc(v.title)}</h4><p>${esc(v.excerpt).slice(0,130)}</p><div class="foot"><span>${esc(v.speaker)}</span><span>→</span></div></a>`;}gleaningsInner+=`</div>`;}}
 }gleaningsInner+=`</div>`;const gleaningsPage=brandShell({title:"Gleanings — Insights",description:`Video wisdom distilled — ${items.length} insights`,bodyHtml:gleaningsInner,homeHref:"../../../index.html",gleaningsHref:"index.html",casesHref:"../../../index.html#cases"});fs.writeFileSync(path.join(outGleaningsDir,"index.html"),gleaningsPage);
 const scriptureInner=`<div class="wrap" style="max-width:760px;margin:2rem auto;text-align:center"><div class="kicker">Projects / ScriptureGuide</div><h1 style="font-family:var(--serif);font-size:2.2rem;margin:0.4rem 0">ScriptureGuide</h1><p style="color:var(--muted);font-size:0.95rem;max-width:34rem;margin:0.5rem auto">Biblical counsel for everyday life — curated Scripture, plain-language guidance. Hosted at <strong style="color:var(--ink)">biblecounselor.com.ng</strong>.</p><p style="margin:1.2rem 0;display:flex;gap:0.6rem;justify-content:center"><a class="btn btn-primary" href="https://biblecounselor.com.ng" target="_blank" rel="noopener">Open biblecounselor.com.ng ↗</a><a class="btn btn-ghost" href="../../index.html">Back</a></p><p style="font-size:0.72rem;color:var(--muted);margin-top:1rem">Alias: <code>projects/ScriptureGuide</code> → external. Redirects in 1.5s.</p></div><script>setTimeout(()=>location.href="https://biblecounselor.com.ng",1500)</script>`;const scripturePage=brandShell({title:"ScriptureGuide — biblecounselor.com.ng",description:"ScriptureGuide — biblical counsel at biblecounselor.com.ng",bodyHtml:scriptureInner,homeHref:"../../index.html",gleaningsHref:"../gleanings/insights/index.html",casesHref:"../../index.html#cases"});fs.writeFileSync(path.join(outScriptureDir,"index.html"),scripturePage);
 const cases=[
 {num:"01",title:"Work",subtitle:"LinkedIn",desc:"Professional history, roles and selected work — connect and see experience.",meta:"linkedin.com/in/peterugwuoke ↗",href:"https://www.linkedin.com/in/peterugwuoke",cta:"View LinkedIn",external:true,icon:"◎",img:"",kicker:"Profile"},
-{num:"02",title:"NaijaPrivacyGuide",subtitle:"Data privacy",desc:"Nigeria data-privacy guide — practical explainers, rights and compliance notes for everyday users.",meta:"Facebook — NaijaPrivacyGuide ↗",href:"https://www.facebook.com/profile.php?id=61593746679286",cta:"Visit page",external:true,icon:"◉",img:"",kicker:"Guide"},
-{num:"03",title:"BibleCounsel",subtitle:"Scripture guide",desc:"Curated biblical counsel by life situation — plain-language guidance. Pastoral tool, Scripture first.",meta:"www.biblecounselor.com.ng ↗",href:"https://www.biblecounselor.com.ng",cta:"Visit site",external:true,icon:"✦",img:"",kicker:"Project"},
-{num:"04",title:"Shop HighFive",subtitle:"E-commerce",desc:"Curated storefront — browse products, collections and checkout. Retail made lean and fast.",meta:"www.shop.highfiveltd.com ↗",href:"https://www.shop.highfiveltd.com",cta:"Visit shop",external:true,icon:"⬡",img:"",kicker:"Store"},
+{num:"02",title:"NaijaPrivacyGuide",subtitle:"Data privacy",desc:"Nigeria data-privacy guide — practical explainers, rights and compliance notes for everyone.",meta:"Facebook — NaijaPrivacyGuide ↗",href:"https://www.facebook.com/profile.php?id=61593746679286",cta:"Visit page",external:true,icon:"◉",img:"",kicker:"Guide"},
+{num:"03",title:"BibleCounsel",subtitle:"Scripture guide",desc:"Curated biblical counsel for real-life scenarios — plain-language guidance. Pastoral tool, Scripture first.",meta:"www.biblecounselor.com.ng ↗",href:"https://www.biblecounselor.com.ng",cta:"Visit site",external:true,icon:"✦",img:"",kicker:"Project"},
+{num:"04",title:"Shop HighFive",subtitle:"E-commerce",desc:"Custom apparel, printing and fashion accessory store.",meta:"www.shop.highfiveltd.com ↗",href:"https://www.shop.highfiveltd.com",cta:"Visit shop",external:true,icon:"⬡",img:"",kicker:"Store"},
 {num:"05",title:"Gleanings",subtitle:"Video wisdom",desc:"Personal reflections on what I learn from great individuals",meta:`${items.length} insights • ${bySpeaker.size} speakers`,href:"projects/gleanings/insights/index.html",cta:"Open Gleanings",icon:"◐",img:"",kicker:"Archive"},
-{num:"06",title:"Socials",subtitle:"Facebook",desc:"Everyday updates, conversations and community — follow along.",meta:"facebook.com/sirp4change ↗",href:"https://www.facebook.com/sirp4change/",cta:"Follow",external:true,icon:"○",img:"",kicker:"Community"}
+{num:"06",title:"Socials",subtitle:"Facebook",desc:"Connect with me — follow along.",meta:"facebook.com/sirp4change ↗",href:"https://www.facebook.com/sirp4change/",cta:"Follow",external:true,icon:"○",img:"",kicker:"Community"}
 ];
 let homeInner=`
 <div class="hero" style="padding-bottom:0.8rem">
-  <div class="hero-grid" style="grid-template-columns:0.9fr 1.1fr;gap:2rem;align-items:center;max-width:var(--max);margin:0 auto;padding:0 1.5rem">
-    <div style="display:flex;justify-content:center;align-items:center">
-      <img src="images/sir_p_main.png" alt="Peter Ugwuoke — portrait" style="width:92%;max-width:420px;height:auto;max-height:520px;object-fit:cover;object-position:35% 18%;clip-path:polygon(12% 0, 100% 0, 100% 88%, 88% 100%, 0 100%, 0 12%);filter:drop-shadow(0 16px 24px rgba(11,11,11,0.08))" onerror="this.src='images/sirP_main.png'"/>
+  <div class="hero-grid">
+    <div style="display:flex;justify-content:center;align-items:center;width:100%">
+      <img class="hero-img" src="images/sir_p_main.png" alt="Peter Ugwuoke — portrait" onerror="this.src='images/sirP_main.png'"/>
     </div>
     <div class="display" style="text-align:right"><h1>Securing <em>Trust,</em><br/>Scaling <em>Innovation.</em></h1><div style="margin-top:0.9rem;display:flex;justify-content:flex-end"><a href="#how-i-help" style="display:inline-flex;align-items:center;gap:0.5rem;font-size:0.72rem;letter-spacing:0.08em;text-transform:uppercase;font-weight:700;padding:0.75rem 1.4rem;border-radius:999px;border:1px solid var(--ink);background:var(--ink);color:var(--paper);text-decoration:none">How I help ↓</a></div></div>
   </div>
@@ -271,19 +476,19 @@ let homeInner=`
 <div id="how-i-help" style="max-width:var(--max);margin:0 auto;padding:1.6rem 1.5rem 0;scroll-margin-top:84px">
   <div style="border-top:1px solid var(--line-strong);padding-top:1.4rem">
     <h3 style="font-family:var(--serif);font-size:1.55rem;line-height:1.1;margin:0;font-weight:400;color:#FFFFFF;background:#24486A;padding:0.45rem 0.75rem;display:inline-block">I help businesses:</h3>
-    <div style="margin-top:1rem;display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:0.65rem">
+    <div class="service-grid">
       <div class="service-card"><div class="icon-box">◈</div><div style="font-size:0.84rem;line-height:1.45;color:#1A1A1A">Navigate highly complex and regulated business environments by remaining compliant</div></div>
       <div class="service-card"><div class="icon-box">◎</div><div style="font-size:0.84rem;line-height:1.45;color:#1A1A1A">Scope and conduct comprehensive Due Diligence investigations</div></div>
       <div class="service-card"><div class="icon-box">⬢</div><div style="font-size:0.84rem;line-height:1.45;color:#1A1A1A">Install fraud prevention &amp; detection mechanisms</div></div>
-      <div class="service-card"><div class="icon-box">⬣</div><div style="font-size:0.84rem;line-height:1.45;color:#1A1A1A">Corporate Records Search / Beneficiary Ownership Searches</div></div>
-      <div class="service-card"><div class="icon-box">⬡</div><div style="font-size:0.84rem;line-height:1.45;color:#1A1A1A">Top-Level Local &amp; International Screening Solutions</div></div>
-      <div class="service-card"><div class="icon-box">⚖</div><div style="font-size:0.84rem;line-height:1.45;color:#1A1A1A">Cross-border criminal records Checks</div></div>
-      <div class="service-card"><div class="icon-box">◉</div><div style="font-size:0.84rem;line-height:1.45;color:#1A1A1A">Local-International PEP / Global watchlists</div></div>
-      <div class="service-card"><div class="icon-box">📰</div><div style="font-size:0.84rem;line-height:1.45;color:#1A1A1A">Adverse Media Searches</div></div>
-      <div class="service-card"><div class="icon-box">◎</div><div style="font-size:0.84rem;line-height:1.45;color:#1A1A1A">Financial Liability checks</div></div>
-      <div class="service-card"><div class="icon-box">⬢</div><div style="font-size:0.84rem;line-height:1.45;color:#1A1A1A">Identity Checks</div></div>
-      <div class="service-card"><div class="icon-box">⬢</div><div style="font-size:0.84rem;line-height:1.45;color:#1A1A1A">HUMINT • OSINT • SOCMINT</div></div>
-      <div class="service-card"><div class="icon-box">◐</div><div style="font-size:0.84rem;line-height:1.45;color:#1A1A1A">On-ground Discreet / Non-Discreet investigations</div></div>
+      <div class="service-card"><div class="icon-box">⬣</div><div style="font-size:0.84rem;line-height:1.45;color:#1A1A1A">Conduct Corporate Records Search / Beneficiary Ownership Searches</div></div>
+      <div class="service-card"><div class="icon-box">⬡</div><div style="font-size:0.84rem;line-height:1.45;color:#1A1A1A">Execute Top-Level Local &amp; International Screening Solutions</div></div>
+      <div class="service-card"><div class="icon-box">⚖</div><div style="font-size:0.84rem;line-height:1.45;color:#1A1A1A">Access Cross-border criminal records Checks</div></div>
+      <div class="service-card"><div class="icon-box">◉</div><div style="font-size:0.84rem;line-height:1.45;color:#1A1A1A">Perform Local-International PEP / Global watchlists Searches</div></div>
+      <div class="service-card"><div class="icon-box">📰</div><div style="font-size:0.84rem;line-height:1.45;color:#1A1A1A">Conduct Comprensive Adverse Media Searches</div></div>
+      <div class="service-card"><div class="icon-box">◎</div><div style="font-size:0.84rem;line-height:1.45;color:#1A1A1A">Carry out Financial Liability checks</div></div>
+      <div class="service-card"><div class="icon-box">⬢</div><div style="font-size:0.84rem;line-height:1.45;color:#1A1A1A">Conduct Identity Reliability Checks</div></div>
+      <div class="service-card"><div class="icon-box">⬢</div><div style="font-size:0.84rem;line-height:1.45;color:#1A1A1A">Execute HUMINT • OSINT • SOCMINT</div></div>
+      <div class="service-card"><div class="icon-box">◐</div><div style="font-size:0.84rem;line-height:1.45;color:#1A1A1A">with On-site Discreet / Non-Discreet investigations</div></div>
     </div>
   </div>
 </div>
