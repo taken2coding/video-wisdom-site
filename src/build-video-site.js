@@ -465,7 +465,7 @@ const cases=[
 {num:"02",title:"NaijaPrivacyGuide",subtitle:"Data privacy",desc:"Nigeria data-privacy guide — practical explainers, rights and compliance notes for everyone.",meta:"Facebook — NaijaPrivacyGuide ↗",href:"https://www.facebook.com/profile.php?id=61593746679286",cta:"Visit page",external:true,icon:"◉",img:"",kicker:"Guide"},
 {num:"03",title:"BibleCounsel",subtitle:"Scripture guide",desc:"Curated biblical counsel for real-life scenarios — plain-language guidance. Pastoral tool, Scripture first.",meta:"www.biblecounselor.com.ng ↗",href:"https://www.biblecounselor.com.ng",cta:"Visit site",external:true,icon:"✦",img:"",kicker:"Project"},
 {num:"04",title:"Shop HighFive",subtitle:"E-commerce",desc:"Custom apparel, printing and fashion accessory store.",meta:"www.shop.highfiveltd.com ↗",href:"https://www.shop.highfiveltd.com",cta:"Visit shop",external:true,icon:"⬡",img:"",kicker:"Store"},
-{num:"05",title:"Gleanings",subtitle:"Video wisdom",desc:"Personal reflections on what I learn from great individuals",meta:`${items.length} insights • ${bySpeaker.size} speakers`,href:"projects/gleanings/insights/index.html",cta:"Open Gleanings",icon:"◐",img:"",kicker:"Archive"},
+{num:"05",title:"Gleanings",subtitle:"Video wisdom",desc:"My personal reflections and insights from resources I find interesting online",meta:`${items.length} insights • ${bySpeaker.size} speakers`,href:"projects/gleanings/insights/index.html",cta:"Open Gleanings",icon:"◐",img:"",kicker:"Archive"},
 {num:"06",title:"Socials",subtitle:"Facebook",desc:"Connect with me — follow along.",meta:"facebook.com/sirp4change ↗",href:"https://www.facebook.com/sirp4change/",cta:"Follow",external:true,icon:"○",img:"",kicker:"Community"}
 ];
 let homeInner=`
@@ -481,8 +481,8 @@ let homeInner=`
   <div style="border-top:1px solid var(--line-strong);padding-top:1.4rem">
     <h3 style="font-family:var(--serif);font-size:1.55rem;line-height:1.1;margin:0;font-weight:400;color:#FFFFFF;background:#24486A;padding:0.45rem 0.75rem;display:inline-block">I help businesses:</h3>
     <div class="service-grid">
-      <div class="service-card"><div class="icon-box">◈</div><div style="font-size:0.84rem;line-height:1.45;color:#1A1A1A">Navigate highly complex and regulated business environments by remaining compliant</div></div>
-      <div class="service-card"><div class="icon-box">◎</div><div style="font-size:0.84rem;line-height:1.45;color:#1A1A1A">Scope and conduct comprehensive Due Diligence investigations</div></div>
+      <div class="service-card"><div class="icon-box">◈</div><div style="font-size:0.84rem;line-height:1.45;color:#1A1A1A">Navigate highly complex and regulated Africa business environments by remaining compliant</div></div>
+      <div class="service-card"><div class="icon-box">◎</div><div style="font-size:0.84rem;line-height:1.45;color:#1A1A1A">Scope and conduct comprehensive Due Diligence investigations in Africa</div></div>
       <div class="service-card"><div class="icon-box">⬢</div><div style="font-size:0.84rem;line-height:1.45;color:#1A1A1A">Install fraud prevention &amp; detection mechanisms</div></div>
       <div class="service-card"><div class="icon-box">⬣</div><div style="font-size:0.84rem;line-height:1.45;color:#1A1A1A">Conduct Corporate Records Search / Beneficiary Ownership Searches</div></div>
       <div class="service-card"><div class="icon-box">⬡</div><div style="font-size:0.84rem;line-height:1.45;color:#1A1A1A">Execute Top-Level Local &amp; International Screening Solutions</div></div>
